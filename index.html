@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Calculadora de Preços - GM Beauty</title>
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Calculadora de precificação inteligente da GM Beauty">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GM Preços">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --page-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --section-bg: #f9f9f9;
+            --input-bg: #ffffff;
+            --input-border: #dddddd;
+            --tabs-bg: #f5f5f5;
+            --result-alt-bg: #f0f0f0;
+            --taxa-item-bg: #ffffff;
+        }
+
+        body.dark-mode {
+            --card-bg: #1e1e2a;
+            --text-main: #eaeaf0;
+            --text-muted: #b3b3c2;
+            --section-bg: #262633;
+            --input-bg: #2c2c3a;
+            --input-border: #3f3f52;
+            --tabs-bg: #20202b;
+            --result-alt-bg: #2c2c3a;
+            --taxa-item-bg: #262633;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--page-bg);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .tabs {
+            display: flex;
+            background: var(--tabs-bg);
+            border-bottom: 2px solid var(--input-border);
+            flex-wrap: wrap;
+            transition: background 0.3s ease;
+        }
+        
+        .tab-btn {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(0,0,0,0.05);
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 30px;
+            animation: fadeIn 0.3s;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--section-bg);
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            transition: background 0.3s ease;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+            font-size: 0.95em;
+        }
+        
+        input[type="number"],
+        input[type="text"] {
+            padding: 10px 12px;
+            border: 2px solid var(--input-border);
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s, background 0.3s, color 0.3s;
+            background: var(--input-bg);
+            color: var(--text-main);
+        }
+        
+        input[type="number"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input.field-saved {
+            animation: fieldSaved 0.6s ease;
+        }
+
+        @keyframes fieldSaved {
+            0% { box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.35); }
+            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+        }
+        
+        .result-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .result-box h3 {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .result-row:last-child {
+            border-bottom: none;
+        }
+        
+        .result-value {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0) scale(0.97);
+        }
+
+        button.is-loading {
+            position: relative;
+            color: transparent !important;
+            pointer-events: none;
+        }
+
+        button.is-loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            left: 50%;
+            margin: -8px 0 0 -8px;
+            border: 2px solid rgba(255,255,255,0.5);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            border-radius: 4px;
+            color: #856404;
+            margin-top: 10px;
+            font-size: 0.95em;
+        }
+        
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 12px;
+            border-radius: 4px;
+            color: #155724;
+            margin-top: 10px;
+        }
+        
+        .platform-simulator {
+            background: var(--taxa-item-bg);
+            border: 2px solid var(--input-border);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .platform-simulator h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .platform-result {
+            background: var(--result-alt-bg);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 0.95em;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        
+        .positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .negative {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .neutral {
+            color: #666;
+        }
+        
+        .add-btn {
+            background: #28a745;
+            padding: 10px 15px;
+            font-size: 0.9em;
+        }
+        
+        .add-btn:hover {
+            background: #218838;
+        }
+        
+        .remove-btn {
+            background: #dc3545;
+            padding: 8px 12px;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+        
+        .remove-btn:hover {
+            background: #c82333;
+        }
+        
+        .taxa-item {
+            background: var(--taxa-item-bg);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 3px solid #667eea;
+            transition: background 0.3s ease;
+        }
+        
+        .taxa-item-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                border-bottom: none;
+                border-left: 3px solid transparent;
+                padding: 12px 20px;
+            }
+            
+            .tab-btn.active {
+                border-left-color: #667eea;
+            }
+            
+            .taxa-item-header {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== DARK MODE OVERRIDES FOR INLINE-STYLED ELEMENTS ===== */
+        body.dark-mode #explicacaoCalculo,
+        body.dark-mode div[style*="background: white"] {
+            background: var(--card-bg) !important;
+            color: var(--text-main);
+        }
+
+        body.dark-mode p[style*="color: #666"],
+        body.dark-mode #textoExplicacao {
+            color: var(--text-muted) !important;
+        }
+
+        body.dark-mode .warning {
+            background: #3a3520;
+            color: #ffd873;
+        }
+
+        body.dark-mode .success {
+            background: #1f3a24;
+            color: #7fdc8f;
+        }
+
+        /* ===== TOP BAR: DARK MODE TOGGLE + INSTALL + ONLINE STATUS ===== */
+        .topbar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 10px 16px 0;
+            flex-wrap: wrap;
+        }
+
+        .topbar-btn {
+            background: rgba(255,255,255,0.18);
+            border: 1px solid rgba(255,255,255,0.35);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease;
+        }
+
+        .topbar-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-1px);
+        }
+
+        /* ===== TOAST NOTIFICATIONS ===== */
+        #toast-container {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 320px;
+        }
+
+        @media (max-width: 480px) {
+            #toast-container {
+                left: 16px;
+                right: 16px;
+                max-width: none;
+            }
+        }
+
+        .toast {
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9em;
+            font-weight: 500;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            opacity: 0;
+            transform: translateX(30px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast.toast-success { background: #28a745; }
+        .toast.toast-error { background: #dc3545; }
+        .toast.toast-info { background: #667eea; }
+
+        /* ===== OFFLINE BANNER ===== */
+        #offline-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #dc3545;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-weight: 600;
+            font-size: 0.9em;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 9998;
+        }
+
+        #offline-banner.show {
+            transform: translateY(0);
+        }
+
+        /* ===== AUTOSAVE INDICATOR ===== */
+        #autosave-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8em;
+            color: rgba(255,255,255,0.85);
+            padding: 6px 12px;
+        }
+
+        #autosave-indicator .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #90EE90;
+            transition: background 0.2s ease;
+        }
+
+        #autosave-indicator.saving .dot {
+            background: #ffd873;
+            animation: pulse 0.8s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ===== HISTORY LIST ===== */
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--taxa-item-bg);
+            border-left: 3px solid #667eea;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: var(--text-main);
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .history-item small {
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .empty-state {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 10px 0;
+        }
+
+        /* ===== SKELETON / LOADING ===== */
+        .app-loading {
+            position: fixed;
+            inset: 0;
+            background: var(--page-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.3s ease;
+        }
+
+        .app-loading .spinner {
+            width: 46px;
+            height: 46px;
+            border: 4px solid rgba(255,255,255,0.35);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        .app-loading.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-loading" class="app-loading"><div class="spinner"></div></div>
+    <div id="toast-container"></div>
+    <div id="offline-banner">📡 Você está offline — seus dados continuam sendo salvos normalmente no dispositivo.</div>
+
+    <div class="container">
+        <div class="topbar">
+            <span id="autosave-indicator"><span class="dot"></span><span id="autosave-text">Salvo</span></span>
+            <button type="button" id="installBtn" class="topbar-btn" style="display:none;" onclick="instalarApp()">⬇️ Instalar app</button>
+            <button type="button" class="topbar-btn" onclick="alternarTema()"><span id="temaIcon">🌙</span> <span id="temaLabel">Modo escuro</span></button>
+        </div>
+        <header>
+            <h1>💄 Calculadora de Preços</h1>
+            <p>GM Beauty - Precificação Inteligente</p>
+        </header>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('config')">⚙️ Configuração</button>
+            <button class="tab-btn" onclick="switchTab('calculadora')">🧮 Calculadora</button>
+            <button class="tab-btn" onclick="switchTab('plataformas')">📊 Plataformas</button>
+            <button class="tab-btn" onclick="switchTab('marketplace')">🛍️ Marketplace</button>
+            <button class="tab-btn" onclick="switchTab('exportar')">💾 Exportar</button>
+            <button class="tab-btn" onclick="switchTab('historico')">📜 Histórico</button>
+        </div>
+        
+        <!-- TAB CONFIGURAÇÃO -->
+        <div id="config" class="tab-content active">
+            <div class="section">
+                <h2>📋 Custos Fixos Mensais</h2>
+                <p style="color: #666; margin-bottom: 15px;">⚠️ Clique nos nomes para editar (ex: trocar "Internet" por "Outros")</p>
+                <div id="custosFixosList"></div>
+                <div class="button-group">
+                    <button class="add-btn" onclick="adicionarCustoFixo()">➕ Adicionar Custo</button>
+                </div>
+                <div class="result-box" style="margin-top: 15px;">
+                    <div class="result-row">
+                        <span>Total Mensal:</span>
+                        <span class="result-value" id="totalMensal">R$ 118,00</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Pedidos/Mês:</span>
+                        <span class="result-value" id="pedidosDisplay">30</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Custo Fixo por Pedido:</span>
+                        <span class="result-value" id="custoFixoPorPedido">R$ 3,93</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>💰 Taxas e Percentuais</h2>
+                <p style="color: #666; margin-bottom: 15px;">✏️ Adicione as taxas que você paga (nome e porcentagem editáveis)</p>
+                <div id="taxasList"></div>
+                <div class="button-group">
+                    <button class="add-btn" onclick="adicionarTaxa()">➕ Adicionar Taxa</button>
+                </div>
+                <div class="result-box" style="margin-top: 15px;">
+                    <div class="result-row">
+                        <span>Total de Taxas:</span>
+                        <span class="result-value" id="totalTaxas">0%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>📦 Gastos com Embalagem (por unidade)</h2>
+                <div class="grid">
+                    <div class="form-group">
+                        <label for="sacola">Sacola (R$)</label>
+                        <input type="number" id="sacola" step="0.01" value="0.75" onchange="atualizarEmbalagem()">
+                    </div>
+                    <div class="form-group">
+                        <label for="tag">Tag (R$)</label>
+                        <input type="number" id="tag" step="0.01" value="0.00" onchange="atualizarEmbalagem()">
+                    </div>
+                    <div class="form-group">
+                        <label for="caixa">Caixa (R$)</label>
+                        <input type="number" id="caixa" step="0.01" value="0.55" onchange="atualizarEmbalagem()">
+                    </div>
+                    <div class="form-group">
+                        <label for="cartao">Cartão (R$)</label>
+                        <input type="number" id="cartao" step="0.01" value="0.31" onchange="atualizarEmbalagem()">
+                    </div>
+                    <div class="form-group">
+                        <label for="adesivo">Adesivo (R$)</label>
+                        <input type="number" id="adesivo" step="0.01" value="0.15" onchange="atualizarEmbalagem()">
+                    </div>
+                    <div class="form-group">
+                        <label for="brinde">Brinde (R$)</label>
+                        <input type="number" id="brinde" step="0.01" value="2.00" onchange="atualizarEmbalagem()">
+                    </div>
+                    <div class="form-group">
+                        <label for="fita">Fita (R$)</label>
+                        <input type="number" id="fita" step="0.01" value="0.00" onchange="atualizarEmbalagem()">
+                    </div>
+                </div>
+                <div class="result-box" style="margin-top: 15px;">
+                    <div class="result-row">
+                        <span>Total de Embalagem:</span>
+                        <span class="result-value" id="totalEmbalagem">R$ 3,76</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📊 Outras Configurações</h2>
+                <div class="grid">
+                    <div class="form-group">
+                        <label for="pedidosMes">Pedidos por Mês</label>
+                        <input type="number" id="pedidosMes" step="1" value="30" onchange="atualizarCustosFixos()">
+                    </div>
+                    <div class="form-group">
+                        <label for="markupSugerido">Markup Sugerido (%)</label>
+                        <input type="number" id="markupSugerido" step="1" value="40" min="0" max="200" onchange="atualizarResumo()">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB CALCULADORA -->
+        <div id="calculadora" class="tab-content">
+            <div class="section">
+                <h2>🧮 Calcular Preço de Venda</h2>
+                <div class="grid">
+                    <div class="form-group">
+                        <label for="custoProduto">Custo do Produto (R$)</label>
+                        <input type="number" id="custoProduto" step="0.01" placeholder="Ex: 15.00" onchange="calcularPrecos(); aoAlterarCalculadora();">
+                    </div>
+                    <div class="form-group">
+                        <label for="frete">Frete (R$) - 0 se grátis</label>
+                        <input type="number" id="frete" step="0.01" value="0.00" onchange="calcularPrecos(); aoAlterarCalculadora();">
+                    </div>
+                </div>
+                
+                <div class="result-box" style="margin-top: 20px;">
+                    <h3>📊 Resultado da Precificação</h3>
+                    <div class="result-row">
+                        <span>Custo do Produto:</span>
+                        <span class="result-value" id="resoCustoProduto">R$ 0,00</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Embalagem:</span>
+                        <span class="result-value" id="resoEmbalagem">R$ 0,00</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Frete:</span>
+                        <span class="result-value" id="resoFrete">R$ 0,00</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Custos Fixos (por pedido):</span>
+                        <span class="result-value" id="resoCustoFixo">R$ 0,00</span>
+                    </div>
+                    <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.3); margin: 10px 0;">
+                    <div class="result-row">
+                        <span><strong>CUSTO TOTAL:</strong></span>
+                        <span class="result-value" id="resoCustoTotal">R$ 0,00</span>
+                    </div>
+                    <div class="result-row">
+                        <span><strong>PREÇO MÍNIMO DE VENDA:</strong></span>
+                        <span class="result-value" id="resoPrecoMinimo" style="font-size: 1.3em;">R$ 0,00</span>
+                    </div>
+                    <div class="result-row">
+                        <span><strong>PREÇO SUGERIDO (+40%):</strong></span>
+                        <span class="result-value" id="resoPrecoSugerido" style="font-size: 1.3em; color: #90EE90;">R$ 0,00</span>
+                    </div>
+                    <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.3); margin: 10px 0;">
+                    <div class="result-row">
+                        <span><strong>LUCRO REAL (no preço sugerido):</strong></span>
+                        <span class="result-value" id="resoLucroReal" style="font-size: 1.3em; color: #90EE90;">R$ 0,00</span>
+                    </div>
+                </div>
+                
+                <div id="explicacaoCalculo" style="margin-top: 20px; background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+                    <h4>📝 Como foi calculado:</h4>
+                    <p id="textoExplicacao" style="color: #666; line-height: 1.6; margin-top: 10px;"></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB PLATAFORMAS (VENDA DIRETA) -->
+        <div id="plataformas" class="tab-content">
+            <div class="section">
+                <h2>📱 Simular Venda Direta</h2>
+                <p style="color: #666; margin-bottom: 20px;">Digite o preço que você quer cobrar e veja quanto lucra</p>
+                
+                <div class="platform-simulator">
+                    <h3>💳 Venda Direta</h3>
+                    <div class="grid">
+                        <div class="form-group">
+                            <label for="precoVendaDireta">Preço de Venda (R$)</label>
+                            <input type="number" id="precoVendaDireta" step="0.01" placeholder="Ex: 39.90" onchange="simularPlataforma('direta')">
+                        </div>
+                    </div>
+                    <div class="platform-result" id="resultadoVendaDireta"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB MARKETPLACE -->
+        <div id="marketplace" class="tab-content">
+            <div class="section">
+                <h2>🛍️ Simular Venda em Marketplace</h2>
+                <p style="color: #666; margin-bottom: 20px;">Igual à calculadora normal, mas com taxas específicas de cada plataforma</p>
+                
+                <!-- SHOPEE -->
+                <div class="platform-simulator">
+                    <h3>🛍️ Shopee</h3>
+                    <div class="grid">
+                        <div class="form-group">
+                            <label for="custoShopee">Custo do Produto (R$)</label>
+                            <input type="number" id="custoShopee" step="0.01" placeholder="Ex: 15.00" onchange="calcularMarketplace('shopee')">
+                        </div>
+                        <div class="form-group">
+                            <label for="freteShopee">Frete (R$)</label>
+                            <input type="number" id="freteShopee" step="0.01" value="0.00" onchange="calcularMarketplace('shopee')">
+                        </div>
+                        <div class="form-group">
+                            <label for="taxaShopee">Taxa Shopee (%)</label>
+                            <input type="number" id="taxaShopee" step="0.01" value="12" onchange="calcularMarketplace('shopee')">
+                        </div>
+                        <div class="form-group">
+                            <label for="outraTaxaShopee">Outra Taxa (R$)</label>
+                            <input type="number" id="outraTaxaShopee" step="0.01" value="0" placeholder="Valor em reais" onchange="calcularMarketplace('shopee')">
+                        </div>
+                    </div>
+                    <div class="platform-result" id="resultadoShopee"></div>
+                </div>
+                
+                <!-- TIKTOK SHOP -->
+                <div class="platform-simulator">
+                    <h3>📲 TikTok Shop</h3>
+                    <div class="grid">
+                        <div class="form-group">
+                            <label for="custoTikTok">Custo do Produto (R$)</label>
+                            <input type="number" id="custoTikTok" step="0.01" placeholder="Ex: 15.00" onchange="calcularMarketplace('tiktok')">
+                        </div>
+                        <div class="form-group">
+                            <label for="freteTikTok">Frete (R$)</label>
+                            <input type="number" id="freteTikTok" step="0.01" value="0.00" onchange="calcularMarketplace('tiktok')">
+                        </div>
+                        <div class="form-group">
+                            <label for="taxaTikTok">Taxa TikTok (%)</label>
+                            <input type="number" id="taxaTikTok" step="0.01" value="8" onchange="calcularMarketplace('tiktok')">
+                        </div>
+                        <div class="form-group">
+                            <label for="outraTaxaTikTok">Outra Taxa (R$)</label>
+                            <input type="number" id="outraTaxaTikTok" step="0.01" value="0" placeholder="Valor em reais" onchange="calcularMarketplace('tiktok')">
+                        </div>
+                    </div>
+                    <div class="platform-result" id="resultadoTikTok"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TAB EXPORTAR -->
+        <div id="exportar" class="tab-content">
+            <div class="section">
+                <h2>💾 Gerenciar Dados</h2>
+                <p style="color: #666; margin-bottom: 20px;">Exporte suas configurações para backup ou compartilhamento</p>
+                
+                <div class="button-group">
+                    <button onclick="exportarConfiguracao()">📥 Exportar Configuração (JSON)</button>
+                    <button onclick="exportarCalculo()">📊 Exportar Cálculo (CSV)</button>
+                    <button onclick="document.getElementById('importInput').click()">📤 Importar Configuração</button>
+                    <input type="file" id="importInput" style="display: none;" accept=".json" onchange="importarConfiguracao()">
+                    <button style="background:#dc3545;" onclick="confirmarLimpezaDados()">🗑️ Limpar Todos os Dados</button>
+                </div>
+                
+                <div class="result-box" style="margin-top: 20px;">
+                    <h3>📌 Resumo de Configurações Atuais</h3>
+                    <div class="result-row">
+                        <span>Total de Custos Fixos:</span>
+                        <span class="result-value" id="resumoCustoFixo">R$ 118,00</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Embalagem por Produto:</span>
+                        <span class="result-value" id="resumoEmbalagem">R$ 3,76</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Total de Taxas:</span>
+                        <span class="result-value" id="resumoTaxas">0%</span>
+                    </div>
+                    <div class="result-row">
+                        <span>Markup Sugerido:</span>
+                        <span class="result-value" id="resumoMarkup">40%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB HISTÓRICO -->
+        <div id="historico" class="tab-content">
+            <div class="section">
+                <h2>📜 Histórico de Precificações</h2>
+                <p style="color: #666; margin-bottom: 15px;">Últimos cálculos realizados na aba Calculadora (salvos automaticamente neste dispositivo)</p>
+                <div class="button-group" style="margin-bottom: 15px;">
+                    <button style="background:#dc3545;" onclick="limparHistorico()">🗑️ Limpar Histórico</button>
+                </div>
+                <div id="historicoList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== DADOS GLOBAIS (valores padrão - só usados se não houver dados salvos) =====
+        let custosFixos = [
+            { nome: 'MEI', valor: 72 },
+            { nome: 'Sistema', valor: 46 }
+        ];
+        
+        let taxas = [];
+
+        // ===== PERSISTÊNCIA / AUTOSAVE =====
+        const STORAGE_KEY = 'gmBeautyCalc_estado_v1';
+        const HISTORICO_KEY = 'gmBeautyCalc_historico_v1';
+        const APP_STORAGE_VERSION = 1;
+        let saveTimer = null;
+        let ultimaRestauracaoOk = false;
+
+        function coletarEstadoAtual() {
+            const inputs = {};
+            document.querySelectorAll('input[id]').forEach(el => {
+                if (el.type === 'file') return;
+                inputs[el.id] = el.value;
+            });
+            const activeTabEl = document.querySelector('.tab-content.active');
+            return {
+                version: APP_STORAGE_VERSION,
+                custosFixos: custosFixos,
+                taxas: taxas,
+                inputs: inputs,
+                activeTab: activeTabEl ? activeTabEl.id : 'config',
+                darkMode: document.body.classList.contains('dark-mode'),
+                savedAt: Date.now()
+            };
+        }
+
+        function salvarEstado() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(coletarEstadoAtual()));
+                indicarSalvo();
+            } catch (e) {
+                console.error('Não foi possível salvar automaticamente:', e);
+                indicarErroSalvamento();
+            }
+        }
+
+        function agendarSalvamento() {
+            indicarSalvando();
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(salvarEstado, 350);
+        }
+
+        // Migração de versões futuras do estado salvo, sem perda de dados
+        function migrarEstado(state) {
+            if (!state.version) state.version = 1;
+            // Espaço reservado para futuras migrações (ex: if (state.version < 2) {...})
+            return state;
+        }
+
+        function restaurarEstado() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return false;
+                const state = migrarEstado(JSON.parse(raw));
+
+                if (Array.isArray(state.custosFixos)) custosFixos = state.custosFixos;
+                if (Array.isArray(state.taxas)) taxas = state.taxas;
+
+                if (state.inputs) {
+                    Object.entries(state.inputs).forEach(([id, val]) => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = val;
+                    });
+                }
+
+                if (state.darkMode) ativarDarkMode(true);
+                if (state.activeTab) ativarTab(state.activeTab);
+
+                return true;
+            } catch (e) {
+                console.error('Não foi possível restaurar o estado salvo:', e);
+                return false;
+            }
+        }
+
+        // ===== INDICADOR DE SALVAMENTO =====
+        function indicarSalvando() {
+            const ind = document.getElementById('autosave-indicator');
+            if (!ind) return;
+            ind.classList.add('saving');
+            document.getElementById('autosave-text').textContent = 'Salvando...';
+        }
+
+        function indicarSalvo() {
+            const ind = document.getElementById('autosave-indicator');
+            if (!ind) return;
+            ind.classList.remove('saving');
+            document.getElementById('autosave-text').textContent = 'Salvo';
+        }
+
+        function indicarErroSalvamento() {
+            const ind = document.getElementById('autosave-indicator');
+            if (!ind) return;
+            ind.classList.remove('saving');
+            document.getElementById('autosave-text').textContent = 'Erro ao salvar';
+            toast('⚠️ Não foi possível salvar automaticamente neste dispositivo (armazenamento cheio ou bloqueado).', 'error', 4000);
+        }
+
+        // ===== TOASTS (mensagens temporárias) =====
+        function toast(mensagem, tipo = 'info', duracao = 3000) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const el = document.createElement('div');
+            el.className = `toast toast-${tipo}`;
+            el.textContent = mensagem;
+            container.appendChild(el);
+            requestAnimationFrame(() => el.classList.add('show'));
+            setTimeout(() => {
+                el.classList.remove('show');
+                setTimeout(() => el.remove(), 300);
+            }, duracao);
+        }
+
+        // ===== TEMA CLARO/ESCURO =====
+        function ativarDarkMode(isDark) {
+            document.body.classList.toggle('dark-mode', isDark);
+            const icon = document.getElementById('temaIcon');
+            const label = document.getElementById('temaLabel');
+            if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+            if (label) label.textContent = isDark ? 'Modo claro' : 'Modo escuro';
+        }
+
+        function alternarTema() {
+            const isDark = !document.body.classList.contains('dark-mode');
+            ativarDarkMode(isDark);
+            agendarSalvamento();
+        }
+
+        // ===== HISTÓRICO DE PRECIFICAÇÕES =====
+        function salvarNoHistorico(entry) {
+            try {
+                const hist = JSON.parse(localStorage.getItem(HISTORICO_KEY) || '[]');
+                hist.unshift(entry);
+                if (hist.length > 20) hist.length = 20;
+                localStorage.setItem(HISTORICO_KEY, JSON.stringify(hist));
+                renderizarHistorico();
+            } catch (e) {
+                console.error('Não foi possível salvar no histórico:', e);
+            }
+        }
+
+        function renderizarHistorico() {
+            const list = document.getElementById('historicoList');
+            if (!list) return;
+            let hist = [];
+            try {
+                hist = JSON.parse(localStorage.getItem(HISTORICO_KEY) || '[]');
+            } catch (e) { hist = []; }
+
+            if (hist.length === 0) {
+                list.innerHTML = '<p class="empty-state">Nenhum cálculo registrado ainda. Use a aba Calculadora para começar a ver seu histórico aqui.</p>';
+                return;
+            }
+
+            list.innerHTML = hist.map(h => `
+                <div class="history-item">
+                    <div><strong>${h.tipo}</strong><br><small>${h.data}</small></div>
+                    <div>Preço sugerido: <strong>${h.precoSugerido}</strong> &nbsp;|&nbsp; Lucro: <strong>${h.lucro}</strong></div>
+                </div>
+            `).join('');
+        }
+
+        function registrarHistoricoCalculadora() {
+            const precoEl = document.getElementById('resoPrecoSugerido');
+            const lucroEl = document.getElementById('resoLucroReal');
+            if (!precoEl || !lucroEl) return;
+            const precoSugerido = precoEl.textContent;
+            const lucro = lucroEl.textContent;
+            if (!precoSugerido || precoSugerido === 'R$ 0,00') return;
+            salvarNoHistorico({
+                tipo: 'Calculadora Padrão',
+                data: new Date().toLocaleString('pt-BR'),
+                precoSugerido,
+                lucro
+            });
+        }
+
+        function aoAlterarCalculadora() {
+            registrarHistoricoCalculadora();
+            const cp = parseFloat(document.getElementById('custoProduto').value) || 0;
+            if (cp > 0) toast('💰 Preço calculado', 'success', 2000);
+        }
+
+        function notificarAtualizacao() {
+            toast('✅ Informações atualizadas', 'success', 2000);
+        }
+
+        function limparHistorico() {
+            if (!confirm('Deseja apagar todo o histórico de precificações? Essa ação não pode ser desfeita.')) return;
+            localStorage.removeItem(HISTORICO_KEY);
+            renderizarHistorico();
+            toast('🗑️ Histórico apagado', 'info');
+        }
+
+        // ===== LIMPAR TODOS OS DADOS =====
+        function confirmarLimpezaDados() {
+            if (!confirm('Tem certeza que deseja apagar TODOS os dados salvos (custos fixos, taxas, embalagens, preferências e histórico)? Essa ação não pode ser desfeita.')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(HISTORICO_KEY);
+            toast('🗑️ Todos os dados foram apagados. Recarregando...', 'info', 2000);
+            setTimeout(() => location.reload(), 1200);
+        }
+
+        // ===== FUNÇÕES AUXILIARES =====
+
+        function ativarTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            const content = document.getElementById(tabName);
+            if (content) content.classList.add('active');
+
+            const btn = document.querySelector(`.tab-btn[onclick="switchTab('${tabName}')"]`);
+            if (btn) btn.classList.add('active');
+        }
+
+        function switchTab(tabName) {
+            ativarTab(tabName);
+            agendarSalvamento();
+        }
+        
+        function formatarMoeda(valor) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(valor);
+        }
+        
+        // ===== CUSTOS FIXOS - EDITAR NOME =====
+        
+        function renderizarCustosFixos() {
+            const container = document.getElementById('custosFixosList');
+            container.innerHTML = '';
+            
+            custosFixos.forEach((custo, index) => {
+                const div = document.createElement('div');
+                div.className = 'taxa-item';
+                div.innerHTML = `
+                    <div class="taxa-item-header">
+                        <input type="text" value="${custo.nome}" onchange="custosFixos[${index}].nome = this.value; atualizarCustosFixos(); notificarAtualizacao();" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <input type="number" value="${custo.valor}" step="0.01" onchange="custosFixos[${index}].valor = parseFloat(this.value); atualizarCustosFixos(); notificarAtualizacao();" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <button class="remove-btn" onclick="custosFixos.splice(${index}, 1); renderizarCustosFixos(); atualizarCustosFixos(); agendarSalvamento();">❌ Remover</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        function adicionarCustoFixo() {
+            custosFixos.push({ nome: 'Novo Custo', valor: 0 });
+            renderizarCustosFixos();
+            atualizarCustosFixos();
+            agendarSalvamento();
+            toast('✅ Custo fixo adicionado', 'success', 2000);
+        }
+        
+        function atualizarCustosFixos() {
+            const totalMensal = custosFixos.reduce((sum, custo) => sum + custo.valor, 0);
+            const pedidosMes = parseFloat(document.getElementById('pedidosMes').value) || 30;
+            const custoFixoPorPedido = totalMensal / pedidosMes;
+            
+            document.getElementById('totalMensal').textContent = formatarMoeda(totalMensal);
+            document.getElementById('custoFixoPorPedido').textContent = formatarMoeda(custoFixoPorPedido);
+            document.getElementById('pedidosDisplay').textContent = pedidosMes;
+            document.getElementById('resumoCustoFixo').textContent = formatarMoeda(totalMensal);
+            
+            calcularPrecos();
+        }
+        
+        // ===== TAXAS - ADICIONAR E EDITAR =====
+        
+        function renderizarTaxas() {
+            const container = document.getElementById('taxasList');
+            container.innerHTML = '';
+            
+            taxas.forEach((taxa, index) => {
+                const div = document.createElement('div');
+                div.className = 'taxa-item';
+                div.innerHTML = `
+                    <div class="taxa-item-header">
+                        <input type="text" value="${taxa.nome}" onchange="taxas[${index}].nome = this.value; renderizarTaxas(); atualizarResumo(); notificarAtualizacao();" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Nome da taxa">
+                        <input type="number" value="${taxa.porcentagem}" step="0.01" onchange="taxas[${index}].porcentagem = parseFloat(this.value); renderizarTaxas(); atualizarResumo(); notificarAtualizacao();" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="0.00">
+                        <button class="remove-btn" onclick="taxas.splice(${index}, 1); renderizarTaxas(); atualizarResumo(); agendarSalvamento();">❌ Remover</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        function adicionarTaxa() {
+            taxas.push({ nome: 'Nova Taxa', porcentagem: 0 });
+            renderizarTaxas();
+            atualizarResumo();
+            agendarSalvamento();
+            toast('✅ Taxa adicionada', 'success', 2000);
+        }
+        
+        function atualizarResumo() {
+            const totalTaxas = taxas.reduce((sum, taxa) => sum + taxa.porcentagem, 0);
+            document.getElementById('totalTaxas').textContent = totalTaxas.toFixed(2) + '%';
+            document.getElementById('resumoTaxas').textContent = totalTaxas.toFixed(2) + '%';
+            calcularPrecos();
+        }
+        
+        // ===== CALCULAR EMBALAGEM =====
+        
+        function atualizarEmbalagem() {
+            const sacola = parseFloat(document.getElementById('sacola').value) || 0;
+            const tag = parseFloat(document.getElementById('tag').value) || 0;
+            const caixa = parseFloat(document.getElementById('caixa').value) || 0;
+            const cartao = parseFloat(document.getElementById('cartao').value) || 0;
+            const adesivo = parseFloat(document.getElementById('adesivo').value) || 0;
+            const brinde = parseFloat(document.getElementById('brinde').value) || 0;
+            const fita = parseFloat(document.getElementById('fita').value) || 0;
+            
+            const totalEmbalagem = sacola + tag + caixa + cartao + adesivo + brinde + fita;
+            
+            document.getElementById('totalEmbalagem').textContent = formatarMoeda(totalEmbalagem);
+            document.getElementById('resumoEmbalagem').textContent = formatarMoeda(totalEmbalagem);
+            
+            calcularPrecos();
+        }
+        
+        // ===== CALCULAR PREÇOS PRINCIPAIS =====
+        
+        function calcularPrecos() {
+            const custoProduto = parseFloat(document.getElementById('custoProduto').value) || 0;
+            const frete = parseFloat(document.getElementById('frete').value) || 0;
+            
+            const sacola = parseFloat(document.getElementById('sacola').value) || 0;
+            const tag = parseFloat(document.getElementById('tag').value) || 0;
+            const caixa = parseFloat(document.getElementById('caixa').value) || 0;
+            const cartao = parseFloat(document.getElementById('cartao').value) || 0;
+            const adesivo = parseFloat(document.getElementById('adesivo').value) || 0;
+            const brinde = parseFloat(document.getElementById('brinde').value) || 0;
+            const fita = parseFloat(document.getElementById('fita').value) || 0;
+            const embalagem = sacola + tag + caixa + cartao + adesivo + brinde + fita;
+            
+            const totalMensal = custosFixos.reduce((sum, custo) => sum + custo.valor, 0);
+            const pedidosMes = parseFloat(document.getElementById('pedidosMes').value) || 30;
+            const custoFixoPorPedido = totalMensal / pedidosMes;
+            
+            const totalTaxas = (taxas.reduce((sum, taxa) => sum + taxa.porcentagem, 0)) / 100;
+            const markupSugerido = (parseFloat(document.getElementById('markupSugerido').value) || 40) / 100;
+            
+            // Custo total
+            const custoTotal = custoProduto + embalagem + frete + custoFixoPorPedido;
+            
+            // Preço mínimo: cubre custos + taxas
+            const precoMinimo = custoTotal / (1 - totalTaxas);
+            
+            // Preço sugerido
+            const precoSugerido = precoMinimo * (1 + markupSugerido);
+            
+            // LUCRO REAL = Preço Sugerido - Custo Total - (Taxas sobre o Preço Sugerido)
+            const taxasDescontadas = precoSugerido * totalTaxas;
+            const lucroReal = precoSugerido - custoTotal - taxasDescontadas;
+            
+            // Atualizar UI
+            document.getElementById('resoCustoProduto').textContent = formatarMoeda(custoProduto);
+            document.getElementById('resoEmbalagem').textContent = formatarMoeda(embalagem);
+            document.getElementById('resoFrete').textContent = formatarMoeda(frete);
+            document.getElementById('resoCustoFixo').textContent = formatarMoeda(custoFixoPorPedido);
+            document.getElementById('resoCustoTotal').textContent = formatarMoeda(custoTotal);
+            document.getElementById('resoPrecoMinimo').textContent = formatarMoeda(precoMinimo);
+            document.getElementById('resoPrecoSugerido').textContent = formatarMoeda(precoSugerido);
+            document.getElementById('resoLucroReal').textContent = formatarMoeda(lucroReal);
+            
+            // Explicação
+            const taxasTexto = taxas.length > 0 ? taxas.map(t => `${t.nome} (${t.porcentagem.toFixed(2)}%)`).join(' + ') : 'Nenhuma taxa';
+            const explicacao = `
+                <strong>Fórmula usada:</strong><br>
+                1. Custo Total = Produto (${formatarMoeda(custoProduto)}) + Embalagem (${formatarMoeda(embalagem)}) + Frete (${formatarMoeda(frete)}) + Custos Fixos/pedido (${formatarMoeda(custoFixoPorPedido)})<br>
+                <strong>Custo Total = ${formatarMoeda(custoTotal)}</strong><br><br>
+                
+                2. Taxas: ${taxasTexto}<br>
+                <strong>Total de Taxas: ${(totalTaxas * 100).toFixed(2)}%</strong><br><br>
+                
+                3. Preço Mínimo deve cobrir: Custo Total + Taxas<br>
+                <strong>Fórmula: ${formatarMoeda(custoTotal)} ÷ (1 - ${(totalTaxas).toFixed(4)}) = ${formatarMoeda(precoMinimo)}</strong><br><br>
+                
+                4. Preço Sugerido = Preço Mínimo × (1 + ${(markupSugerido * 100).toFixed(0)}% markup)<br>
+                <strong>${formatarMoeda(precoMinimo)} × 1,${((markupSugerido * 100) % 100).toFixed(0)} = ${formatarMoeda(precoSugerido)}</strong><br><br>
+
+                5. Lucro Real = Preço Sugerido - Custo Total - Taxas<br>
+                <strong>${formatarMoeda(precoSugerido)} - ${formatarMoeda(custoTotal)} - ${formatarMoeda(taxasDescontadas)} = ${formatarMoeda(lucroReal)}</strong>
+            `;
+            document.getElementById('textoExplicacao').innerHTML = explicacao;
+        }
+        
+        // ===== SIMULAR VENDA DIRETA =====
+        
+        function simularPlataforma(plataforma) {
+            const custoProduto = parseFloat(document.getElementById('custoProduto').value) || 0;
+            const frete = parseFloat(document.getElementById('frete').value) || 0;
+            
+            const sacola = parseFloat(document.getElementById('sacola').value) || 0;
+            const tag = parseFloat(document.getElementById('tag').value) || 0;
+            const caixa = parseFloat(document.getElementById('caixa').value) || 0;
+            const cartao = parseFloat(document.getElementById('cartao').value) || 0;
+            const adesivo = parseFloat(document.getElementById('adesivo').value) || 0;
+            const brinde = parseFloat(document.getElementById('brinde').value) || 0;
+            const fita = parseFloat(document.getElementById('fita').value) || 0;
+            const embalagem = sacola + tag + caixa + cartao + adesivo + brinde + fita;
+            
+            const totalMensal = custosFixos.reduce((sum, custo) => sum + custo.valor, 0);
+            const pedidosMes = parseFloat(document.getElementById('pedidosMes').value) || 30;
+            const custoFixoPorPedido = totalMensal / pedidosMes;
+            
+            const custoTotal = custoProduto + embalagem + frete + custoFixoPorPedido;
+            
+            let precoVenda = parseFloat(document.getElementById('precoVendaDireta').value) || 0;
+            let resultDiv = document.getElementById('resultadoVendaDireta');
+            
+            if (precoVenda === 0) {
+                resultDiv.innerHTML = '<span class="neutral">Digite um preço para simular</span>';
+                return;
+            }
+            
+            const totalTaxas = (taxas.reduce((sum, taxa) => sum + taxa.porcentagem, 0)) / 100;
+            const taxasTotal = precoVenda * totalTaxas;
+            const lucro = precoVenda - custoTotal - taxasTotal;
+            const margem = (lucro / precoVenda) * 100;
+            const classeResultado = lucro >= 0 ? 'positive' : 'negative';
+            
+            let taxasTexto = taxas.map(t => `<br>${t.nome} (${t.porcentagem.toFixed(2)}%): ${formatarMoeda(precoVenda * (t.porcentagem / 100))}`).join('');
+            
+            const resultado = `
+                <strong>Preço de Venda:</strong> ${formatarMoeda(precoVenda)}<br>
+                <strong>Custo Total:</strong> ${formatarMoeda(custoTotal)}<br>
+                <strong>Taxas (${(totalTaxas * 100).toFixed(2)}%):</strong> ${formatarMoeda(taxasTotal)}${taxasTexto}
+                <hr style="margin: 10px 0; border: none; border-top: 1px solid #ccc;">
+                <strong>Lucro Líquido:</strong> <span class="${classeResultado}">${formatarMoeda(lucro)}</span><br>
+                <strong>Margem:</strong> <span class="${classeResultado}">${margem.toFixed(2)}%</span>
+            `;
+            
+            resultDiv.innerHTML = resultado;
+        }
+        
+        // ===== SIMULAR MARKETPLACE =====
+        
+        function calcularMarketplace(plataforma) {
+            const totalMensal = custosFixos.reduce((sum, custo) => sum + custo.valor, 0);
+            const pedidosMes = parseFloat(document.getElementById('pedidosMes').value) || 30;
+            const custoFixoPorPedido = totalMensal / pedidosMes;
+            
+            const sacola = parseFloat(document.getElementById('sacola').value) || 0;
+            const tag = parseFloat(document.getElementById('tag').value) || 0;
+            const caixa = parseFloat(document.getElementById('caixa').value) || 0;
+            const cartao = parseFloat(document.getElementById('cartao').value) || 0;
+            const adesivo = parseFloat(document.getElementById('adesivo').value) || 0;
+            const brinde = parseFloat(document.getElementById('brinde').value) || 0;
+            const fita = parseFloat(document.getElementById('fita').value) || 0;
+            const embalagem = sacola + tag + caixa + cartao + adesivo + brinde + fita;
+            
+            let custoProduto, frete, taxaPercent, outraTaxaReais, resultado, resultDiv;
+            
+            if (plataforma === 'shopee') {
+                custoProduto = parseFloat(document.getElementById('custoShopee').value) || 0;
+                frete = parseFloat(document.getElementById('freteShopee').value) || 0;
+                taxaPercent = (parseFloat(document.getElementById('taxaShopee').value) || 12) / 100;
+                outraTaxaReais = parseFloat(document.getElementById('outraTaxaShopee').value) || 0;
+                resultDiv = document.getElementById('resultadoShopee');
+            } else if (plataforma === 'tiktok') {
+                custoProduto = parseFloat(document.getElementById('custoTikTok').value) || 0;
+                frete = parseFloat(document.getElementById('freteTikTok').value) || 0;
+                taxaPercent = (parseFloat(document.getElementById('taxaTikTok').value) || 8) / 100;
+                outraTaxaReais = parseFloat(document.getElementById('outraTaxaTikTok').value) || 0;
+                resultDiv = document.getElementById('resultadoTikTok');
+            }
+            
+            if (custoProduto === 0) {
+                resultDiv.innerHTML = '<span class="neutral">Digite um custo para simular</span>';
+                return;
+            }
+            
+            const custoTotal = custoProduto + embalagem + frete + custoFixoPorPedido;
+            
+            // Calcula com desconto de taxas percentual
+            const precoMinimo = (custoTotal + outraTaxaReais) / (1 - taxaPercent);
+            const markup = (parseFloat(document.getElementById('markupSugerido').value) || 40) / 100;
+            const precoSugerido = precoMinimo * (1 + markup);
+            
+            const taxaPercentValor = precoSugerido * taxaPercent;
+            const lucroSugerido = precoSugerido - custoTotal - taxaPercentValor - outraTaxaReais;
+            
+            resultado = `
+                <strong>Custo do Produto:</strong> ${formatarMoeda(custoProduto)}<br>
+                <strong>Embalagem:</strong> ${formatarMoeda(embalagem)}<br>
+                <strong>Frete:</strong> ${formatarMoeda(frete)}<br>
+                <strong>Custos Fixos (por pedido):</strong> ${formatarMoeda(custoFixoPorPedido)}<br>
+                <strong>Custo Total:</strong> ${formatarMoeda(custoTotal)}<br>
+                <hr style="margin: 10px 0; border: none; border-top: 1px solid #ccc;">
+                <strong>Taxa Plataforma (${(taxaPercent * 100).toFixed(2)}%):</strong> ${formatarMoeda(taxaPercentValor)}<br>
+                <strong>Outra Taxa (R$):</strong> ${formatarMoeda(outraTaxaReais)}<br>
+                <strong>Preço Sugerido (com ${(markup * 100).toFixed(0)}% markup):</strong> <span class="positive">${formatarMoeda(precoSugerido)}</span><br>
+                <hr style="margin: 10px 0; border: none; border-top: 1px solid #ccc;">
+                <strong>Lucro Líquido:</strong> <span class="positive">${formatarMoeda(lucroSugerido)}</span><br>
+                <strong>Margem:</strong> <span class="positive">${((lucroSugerido / precoSugerido) * 100).toFixed(2)}%</span>
+            `;
+            
+            resultDiv.innerHTML = resultado;
+        }
+        
+        // ===== EXPORTAR E IMPORTAR =====
+        
+        function exportarConfiguracao() {
+            const config = {
+                custos_fixos: custosFixos,
+                taxas: taxas,
+                embalagem: {
+                    sacola: parseFloat(document.getElementById('sacola').value),
+                    tag: parseFloat(document.getElementById('tag').value),
+                    caixa: parseFloat(document.getElementById('caixa').value),
+                    cartao: parseFloat(document.getElementById('cartao').value),
+                    adesivo: parseFloat(document.getElementById('adesivo').value),
+                    brinde: parseFloat(document.getElementById('brinde').value),
+                    fita: parseFloat(document.getElementById('fita').value)
+                },
+                pedidos_mes: parseFloat(document.getElementById('pedidosMes').value),
+                markup_sugerido: parseFloat(document.getElementById('markupSugerido').value),
+                data_exportacao: new Date().toLocaleString('pt-BR')
+            };
+            
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `precificacao_gm_beauty_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            toast('📥 Configuração exportada com sucesso', 'success');
+        }
+
+        function exportarCalculo() {
+            const linhas = [
+                ['Item', 'Valor'],
+                ['Custo do Produto', document.getElementById('resoCustoProduto').textContent],
+                ['Embalagem', document.getElementById('resoEmbalagem').textContent],
+                ['Frete', document.getElementById('resoFrete').textContent],
+                ['Custos Fixos (por pedido)', document.getElementById('resoCustoFixo').textContent],
+                ['Custo Total', document.getElementById('resoCustoTotal').textContent],
+                ['Preço Mínimo de Venda', document.getElementById('resoPrecoMinimo').textContent],
+                ['Preço Sugerido', document.getElementById('resoPrecoSugerido').textContent],
+                ['Lucro Real', document.getElementById('resoLucroReal').textContent],
+                ['Data', new Date().toLocaleString('pt-BR')]
+            ];
+
+            const csv = linhas.map(linha => linha.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n');
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `calculo_gm_beauty_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            toast('📊 Cálculo exportado em CSV', 'success');
+        }
+        
+        function importarConfiguracao() {
+            const file = document.getElementById('importInput').files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const config = JSON.parse(e.target.result);
+                    
+                    custosFixos = config.custos_fixos || [];
+                    taxas = config.taxas || [];
+                    
+                    document.getElementById('sacola').value = config.embalagem.sacola;
+                    document.getElementById('tag').value = config.embalagem.tag;
+                    document.getElementById('caixa').value = config.embalagem.caixa;
+                    document.getElementById('cartao').value = config.embalagem.cartao;
+                    document.getElementById('adesivo').value = config.embalagem.adesivo;
+                    document.getElementById('brinde').value = config.embalagem.brinde;
+                    document.getElementById('fita').value = config.embalagem.fita;
+                    document.getElementById('pedidosMes').value = config.pedidos_mes;
+                    document.getElementById('markupSugerido').value = config.markup_sugerido;
+                    
+                    renderizarCustosFixos();
+                    renderizarTaxas();
+                    atualizarCustosFixos();
+                    atualizarEmbalagem();
+                    atualizarResumo();
+                    agendarSalvamento();
+
+                    toast('✅ Configuração importada com sucesso!', 'success');
+                } catch (error) {
+                    toast('❌ Erro ao importar arquivo: ' + error.message, 'error', 4000);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ===== AUTOSAVE GLOBAL (captura qualquer alteração em campos) =====
+        document.addEventListener('input', function(e) {
+            if (e.target.matches('input[type="number"], input[type="text"]')) {
+                agendarSalvamento();
+                e.target.classList.remove('field-saved');
+                void e.target.offsetWidth; // reinicia a animação
+                e.target.classList.add('field-saved');
+            }
+        });
+
+        document.addEventListener('change', function(e) {
+            if (e.target.matches('input[type="number"], input[type="text"]')) {
+                agendarSalvamento();
+            }
+        });
+
+        window.addEventListener('beforeunload', function() {
+            try { salvarEstado(); } catch (e) { /* silencioso */ }
+        });
+
+        // ===== STATUS ONLINE/OFFLINE =====
+        function atualizarStatusConexao() {
+            const banner = document.getElementById('offline-banner');
+            if (!banner) return;
+            if (navigator.onLine) {
+                banner.classList.remove('show');
+            } else {
+                banner.classList.add('show');
+            }
+        }
+
+        window.addEventListener('offline', atualizarStatusConexao);
+        window.addEventListener('online', function() {
+            atualizarStatusConexao();
+            toast('✅ Conexão restaurada', 'success');
+        });
+
+        // ===== INSTALAÇÃO DO PWA =====
+        let deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            const btn = document.getElementById('installBtn');
+            if (btn) btn.style.display = 'inline-block';
+        });
+
+        function instalarApp() {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.finally(function() {
+                deferredPrompt = null;
+                const btn = document.getElementById('installBtn');
+                if (btn) btn.style.display = 'none';
+            });
+        }
+
+        window.addEventListener('appinstalled', function() {
+            toast('🎉 Aplicativo instalado com sucesso!', 'success');
+            const btn = document.getElementById('installBtn');
+            if (btn) btn.style.display = 'none';
+        });
+
+        // ===== SERVICE WORKER (offline + atualização automática) =====
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('sw.js').then(function(reg) {
+                    reg.addEventListener('updatefound', function() {
+                        const newWorker = reg.installing;
+                        if (!newWorker) return;
+                        newWorker.addEventListener('statechange', function() {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                toast('🔄 Nova versão disponível. Atualizando...', 'info', 3000);
+                                setTimeout(function() { window.location.reload(); }, 1500);
+                            }
+                        });
+                    });
+                }).catch(function(err) {
+                    console.warn('Service Worker não pôde ser registrado:', err);
+                });
+            });
+        }
+        
+        // ===== INICIALIZAÇÃO =====
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Restaura a última sessão salva (se existir) antes de renderizar
+            ultimaRestauracaoOk = restaurarEstado();
+
+            // 2. Renderiza listas dinâmicas e recalcula tudo com os dados (restaurados ou padrão)
+            renderizarCustosFixos();
+            renderizarTaxas();
+            atualizarCustosFixos();
+            atualizarEmbalagem();
+            atualizarResumo();
+            renderizarHistorico();
+
+            document.getElementById('markupSugerido').addEventListener('change', () => {
+                document.getElementById('resumoMarkup').textContent = document.getElementById('markupSugerido').value + '%';
+            });
+
+            // 3. Garante que os campos da calculadora/simuladores fiquem coerentes com os dados restaurados
+            calcularPrecos();
+            simularPlataforma('direta');
+            calcularMarketplace('shopee');
+            calcularMarketplace('tiktok');
+
+            // 4. Status de conexão inicial
+            atualizarStatusConexao();
+
+            if (ultimaRestauracaoOk) {
+                toast('👋 Sessão anterior restaurada', 'info', 2500);
+            }
+
+            // 5. Remove a tela de carregamento
+            const loading = document.getElementById('app-loading');
+            if (loading) {
+                setTimeout(() => {
+                    loading.classList.add('hide');
+                    setTimeout(() => loading.remove(), 350);
+                }, 200);
+            }
+
+            indicarSalvo();
+        });
+    </script>
+</body>
+</html>
